@@ -1,25 +1,36 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/docker/docker/builder/dockerfile/parser"
 )
 
 func main() {
-	f, err := os.Open(os.Args[1])
+	err := Main(os.Args)
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+}
 
-	n, err := parser.Parse(f)
+func Main(args []string) error {
+	b, err := ioutil.ReadFile(os.Args[1])
 	if err != nil {
-		panic(err)
+		return err
+	}
+	buf := bytes.NewBuffer(b)
+
+	n, err := parser.Parse(buf)
+	if err != nil {
+		return err
 	}
 
-	showNode(n)
+	return json.NewEncoder(os.Stdout).Encode(n)
+	// showNode(n)
 }
 
 func showNode(n *parser.Node) {
