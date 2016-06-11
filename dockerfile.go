@@ -10,9 +10,10 @@ import (
 type Dockerfile struct {
 	Content []byte
 	AST     *parser.Node
+	Path    string
 }
 
-func NewDockerfile(fpath string) (*Dockerfile, error) {
+func Analyze(fpath string) ([]Problem, error) {
 	b, err := ioutil.ReadFile(fpath)
 	if err != nil {
 		return nil, err
@@ -24,8 +25,25 @@ func NewDockerfile(fpath string) (*Dockerfile, error) {
 		return nil, err
 	}
 
-	return &Dockerfile{
+	d := &Dockerfile{
 		Content: b,
 		AST:     n,
-	}, nil
+		Path:    fpath,
+	}
+
+	res := make([]Problem, 0)
+	for _, r := range Rules {
+		res = append(res, r(d)...)
+	}
+	return res, nil
+}
+
+func (d *Dockerfile) Nodes(instruction string) []*parser.Node {
+	res := make([]*parser.Node, 0)
+	for _, n := range d.AST.Children {
+		if n.Value == instruction {
+			res = append(res, n)
+		}
+	}
+	return res
 }

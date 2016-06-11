@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -13,10 +13,13 @@ func main() {
 }
 
 func Main(args []string) error {
-	d, err := NewDockerfile(args[1])
+	problems, err := Analyze(args[1])
 	if err != nil {
 		return err
 	}
 
-	return json.NewEncoder(os.Stdout).Encode(d.AST)
+	for _, p := range problems {
+		fmt.Println(p)
+	}
+	return nil
 }
