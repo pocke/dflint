@@ -13,22 +13,28 @@ type Dockerfile struct {
 	Path    string
 }
 
+func newDockerfile(content []byte, path string) (*Dockerfile, error) {
+	n, err := parser.Parse(bytes.NewReader(content))
+	if err != nil {
+		return nil, err
+	}
+
+	return &Dockerfile{
+		Content: content,
+		AST:     n,
+		Path:    path,
+	}, nil
+}
+
 func Analyze(fpath string) ([]Problem, error) {
 	b, err := ioutil.ReadFile(fpath)
 	if err != nil {
 		return nil, err
 	}
-	buf := bytes.NewBuffer(b)
 
-	n, err := parser.Parse(buf)
+	d, err := newDockerfile(b, fpath)
 	if err != nil {
-		return nil, err
-	}
-
-	d := &Dockerfile{
-		Content: b,
-		AST:     n,
-		Path:    fpath,
+		return []Problem{{Message: "Syntax Error"}}, nil // TODO
 	}
 
 	res := make([]Problem, 0)
