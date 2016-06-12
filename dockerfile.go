@@ -33,7 +33,7 @@ func Analyze(fpath string) ([]Problem, error) {
 
 	res := make([]Problem, 0)
 	for _, r := range Rules {
-		res = append(res, r(d)...)
+		res = append(res, r.Analyze(d)...)
 	}
 	return res, nil
 }
