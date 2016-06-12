@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/bmatcuk/doublestar"
 	"github.com/ogier/pflag"
 )
 
@@ -21,7 +22,16 @@ func Main(args []string) error {
 	fs.Parse(args[1:])
 
 	ps := make([]Problem, 0)
-	for _, f := range fs.Args() {
+	targets := fs.Args()
+	if len(targets) == 0 {
+		var err error
+		targets, err = doublestar.Glob("**/Dockerfile")
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, f := range targets {
 		problems, err := Analyze(f)
 		if err != nil {
 			return err
