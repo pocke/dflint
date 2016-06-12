@@ -1,9 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"os"
-)
+import "os"
 
 func main() {
 	err := Main(os.Args)
@@ -18,8 +15,6 @@ func Main(args []string) error {
 		return err
 	}
 
-	for _, p := range problems {
-		fmt.Println(p)
-	}
+	FormatJSON(problems, os.Stdout)
 	return nil
 }
