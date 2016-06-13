@@ -11,14 +11,15 @@ import (
 func main() {
 	err := Main(os.Args)
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 
 func Main(args []string) error {
 	fs := pflag.NewFlagSet(args[0], pflag.ExitOnError)
 	fmtrName := ""
-	fs.StringVarP(&fmtrName, "formatter", "f", "json", "Output Formatter")
+	fs.StringVarP(&fmtrName, "formatter", "f", "default", "Output Formatter")
 	fs.Parse(args[1:])
 
 	ps := make([]Problem, 0)
