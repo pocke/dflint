@@ -53,3 +53,12 @@ func (d *Dockerfile) Nodes(instruction string) []*parser.Node {
 	}
 	return res
 }
+
+func nodeIndex(n []*parser.Node, target *parser.Node) int {
+	for i, v := range n {
+		if v == target {
+			return i
+		}
+	}
+	return -1
+}
