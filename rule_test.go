@@ -104,3 +104,25 @@ func findRule(t string) Rule {
 	}
 	panic(fmt.Sprintf("%s doesn't found", t))
 }
+
+func TestRuleExportInRUN(t *testing.T) {
+	r := findRule("ExportInRUN")
+	d, err := newDockerfile([]byte(`FROM busybox
+RUN export FOO=BAR
+`), "/dev/null")
+	if err != nil {
+		t.Error(err)
+	}
+
+	ps := r.Analyze(d)
+	if len(ps) != 1 {
+		t.Errorf("should find one problem, but got %v", ps)
+	}
+	if ps[0].Type != "ExportInRUN" {
+		t.Errorf("Type should be 'ExportInRUN', but got %s", ps[0].Type)
+	}
+	if ps[0].Line != 2 {
+		t.Errorf("Line should be 2, but got %d", ps[0].Line)
+	}
+
+}
