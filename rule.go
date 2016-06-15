@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/mvdan/sh"
 )
 
 type Rule struct {
@@ -49,6 +52,7 @@ var Rules = []Rule{
 			return res
 		},
 	},
+
 	{
 		Type: "FROMShouldBeFirst",
 		f: func(r *Rule, d *Dockerfile) []Problem {
@@ -90,6 +94,52 @@ var Rules = []Rule{
 				d,
 				"FROM Instruction should be at first line",
 			)}
+		},
+	},
+
+	{
+		Type: "ExportInRUN",
+		f: func(r *Rule, d *Dockerfile) []Problem {
+			res := make([]Problem, 0)
+
+			for _, v := range d.Nodes("run") {
+				f, err := parseSh(v)
+				if err != nil {
+					// the err is syntax error of shell. so, the err shoulde be handled in other rule.
+					continue
+				}
+
+				w := ShWalker{
+					onCallExpr: func(s sh.CallExpr) {
+						if len(s.Args) != 2 {
+							return
+						}
+						if l, ok := s.Args[0].Parts[0].(sh.Lit); !ok || l.Value != "export" {
+							return
+						}
+						env, ok := s.Args[1].Parts[0].(sh.Lit)
+						re := regexp.MustCompile(`^(\w+)\=(.+)$`)
+						if !ok || !re.MatchString(env.Value) {
+							return
+						}
+
+						// TODO: line,col,length...
+						res = append(res, r.MakeProblem(
+							v.StartLine,
+							0,
+							0,
+							d,
+							fmt.Sprintf("Does not work `export` in RUN instruction. Use `ENV %s` instead of this.", env.Value),
+						))
+					},
+				}
+
+				for _, stmt := range f.Stmts {
+					w.Walk(stmt)
+				}
+			}
+
+			return res
 		},
 	},
 }

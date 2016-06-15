@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	"github.com/docker/docker/builder/dockerfile/parser"
+	"github.com/mvdan/sh"
 )
 
 type Dockerfile struct {
@@ -61,4 +62,9 @@ func nodeIndex(n []*parser.Node, target *parser.Node) int {
 		}
 	}
 	return -1
+}
+
+func parseSh(n *parser.Node) (sh.File, error) {
+	r := bytes.NewReader([]byte(n.Next.Value))
+	return sh.Parse(r, "", sh.ParseComments)
 }
