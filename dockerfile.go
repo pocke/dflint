@@ -64,7 +64,7 @@ func nodeIndex(n []*parser.Node, target *parser.Node) int {
 	return -1
 }
 
-func parseSh(n *parser.Node) (sh.File, error) {
+func parseSh(n *parser.Node) (*sh.File, error) {
 	r := bytes.NewReader([]byte(n.Next.Value))
 	return sh.Parse(r, "", sh.ParseComments)
 }
