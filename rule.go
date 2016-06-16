@@ -110,14 +110,14 @@ var Rules = []Rule{
 				}
 
 				w := ShWalker{
-					onCallExpr: func(s sh.CallExpr) {
+					onCallExpr: func(s *sh.CallExpr) {
 						if len(s.Args) != 2 {
 							return
 						}
-						if l, ok := s.Args[0].Parts[0].(sh.Lit); !ok || l.Value != "export" {
+						if l, ok := s.Args[0].Parts[0].(*sh.Lit); !ok || l.Value != "export" {
 							return
 						}
-						env, ok := s.Args[1].Parts[0].(sh.Lit)
+						env, ok := s.Args[1].Parts[0].(*sh.Lit)
 						re := regexp.MustCompile(`^(\w+)\=(.+)$`)
 						if !ok || !re.MatchString(env.Value) {
 							return
