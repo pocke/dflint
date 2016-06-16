@@ -142,4 +142,27 @@ var Rules = []Rule{
 			return res
 		},
 	},
+
+	{
+		Type: "ShellSyntaxError",
+		f: func(r *Rule, d *Dockerfile) []Problem {
+			res := make([]Problem, 0)
+
+			for _, v := range d.Nodes("run") {
+				_, err := parseSh(v)
+				if err != nil {
+					// TODO: line, col, etc...
+					res = append(res, r.MakeProblem(
+						v.StartLine,
+						0,
+						0,
+						d,
+						fmt.Sprintf("Shell Syntax Error: %s", err.Error()),
+					))
+				}
+			}
+
+			return res
+		},
+	},
 }

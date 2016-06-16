@@ -124,5 +124,26 @@ RUN export FOO=BAR
 	if ps[0].Line != 2 {
 		t.Errorf("Line should be 2, but got %d", ps[0].Line)
 	}
+}
 
+func TestRuleShellSyntaxError(t *testing.T) {
+	r := findRule("ShellSyntaxError")
+	d, err := newDockerfile([]byte(`FROM busybox
+RUN echo hoge
+RUN foo &&
+`), "/dev/null")
+	if err != nil {
+		t.Error(err)
+	}
+
+	ps := r.Analyze(d)
+	if len(ps) != 1 {
+		t.Errorf("should find one problem, but got %v", ps)
+	}
+	if ps[0].Type != "ShellSyntaxError" {
+		t.Errorf("Type should be 'ShellSyntaxError', but got %s", ps[0].Type)
+	}
+	if ps[0].Line != 3 {
+		t.Errorf("Line should be 3, but got %d", ps[0].Line)
+	}
 }
