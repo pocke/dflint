@@ -27,7 +27,7 @@ func newDockerfile(content []byte, path string) (*Dockerfile, error) {
 	}, nil
 }
 
-func Analyze(fpath string) ([]Problem, error) {
+func Analyze(fpath string, c *Config) ([]Problem, error) {
 	b, err := ioutil.ReadFile(fpath)
 	if err != nil {
 		return nil, err
@@ -40,6 +40,9 @@ func Analyze(fpath string) ([]Problem, error) {
 
 	res := make([]Problem, 0)
 	for _, r := range Rules {
+		if !c.IsEnabledRule(r.Type) {
+			continue
+		}
 		res = append(res, r.Analyze(d)...)
 	}
 	return res, nil

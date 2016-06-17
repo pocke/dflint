@@ -22,7 +22,6 @@ func Main(args []string) error {
 	fs.StringVarP(&fmtrName, "formatter", "f", "default", "Output Formatter")
 	fs.Parse(args[1:])
 
-	ps := make([]Problem, 0)
 	targets := fs.Args()
 	if len(targets) == 0 {
 		var err error
@@ -32,8 +31,14 @@ func Main(args []string) error {
 		}
 	}
 
+	c, err := ParseConfig()
+	if err != nil {
+		return err
+	}
+
+	ps := make([]Problem, 0)
 	for _, f := range targets {
-		problems, err := Analyze(f)
+		problems, err := Analyze(f, c)
 		if err != nil {
 			return err
 		}
