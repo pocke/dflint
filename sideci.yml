@@ -3,3 +3,4 @@ linter:
     options:
       disable:
         - golint
+      dupl-threshold: 100
