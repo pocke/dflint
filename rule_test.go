@@ -6,15 +6,9 @@ import (
 )
 
 func TestRuleDowncaseInstruction(t *testing.T) {
-	r := findRule("DowncaseInstruction")
-	d, err := newDockerfile([]byte(`FROM busybox
+	ps := analyzeOneRule("DowncaseInstruction", `FROM busybox
 run ls
-`), "/dev/null")
-	if err != nil {
-		t.Error(err)
-	}
-
-	ps := r.Analyze(d)
+`)
 	if len(ps) != 1 {
 		t.Errorf("Problems should be 1, but got %d", len(ps))
 	}
@@ -27,28 +21,16 @@ run ls
 }
 
 func TestRuleFROMShouldBeFirst_valid(t *testing.T) {
-	r := findRule("FROMShouldBeFirst")
-	d, err := newDockerfile([]byte(`FROM busybox
+	ps := analyzeOneRule("FROMShouldBeFirst", `FROM busybox
 RUN ls
-`), "/dev/null")
-	if err != nil {
-		t.Error(err)
-	}
-
-	ps := r.Analyze(d)
+`)
 	if len(ps) != 0 {
 		t.Errorf("should find no problems, but got %v", ps)
 	}
 }
 
 func TestRuleFROMShouldBeFirst_doesntHaveFROM(t *testing.T) {
-	r := findRule("FROMShouldBeFirst")
-	d, err := newDockerfile([]byte(`RUN ls`), "/dev/null")
-	if err != nil {
-		t.Error(err)
-	}
-
-	ps := r.Analyze(d)
+	ps := analyzeOneRule("FROMShouldBeFirst", `RUN ls`)
 	if len(ps) != 1 {
 		t.Errorf("should find one problem, but got %v", ps)
 	}
@@ -58,15 +40,9 @@ func TestRuleFROMShouldBeFirst_doesntHaveFROM(t *testing.T) {
 }
 
 func TestRuleFROMShouldBeFirst_hasManyFROM(t *testing.T) {
-	r := findRule("FROMShouldBeFirst")
-	d, err := newDockerfile([]byte(`FROM scratch
+	ps := analyzeOneRule("FROMShouldBeFirst", `FROM scratch
 FROM busybox
-`), "/dev/null")
-	if err != nil {
-		t.Error(err)
-	}
-
-	ps := r.Analyze(d)
+`)
 	if len(ps) != 2 {
 		t.Errorf("should find two problems, but got %v", ps)
 	}
@@ -76,15 +52,9 @@ FROM busybox
 }
 
 func TestRuleFROMShouldBeFirst_FROMIsNotFirst(t *testing.T) {
-	r := findRule("FROMShouldBeFirst")
-	d, err := newDockerfile([]byte(`RUN ls
+	ps := analyzeOneRule("FROMShouldBeFirst", `RUN ls
 FROM busybox
-`), "/dev/null")
-	if err != nil {
-		t.Error(err)
-	}
-
-	ps := r.Analyze(d)
+`)
 	if len(ps) != 1 {
 		t.Errorf("should find one problem, but got %v", ps)
 	}
@@ -96,25 +66,10 @@ FROM busybox
 	}
 }
 
-func findRule(t string) Rule {
-	for _, r := range Rules {
-		if r.Type == t {
-			return r
-		}
-	}
-	panic(fmt.Sprintf("%s doesn't found", t))
-}
-
 func TestRuleExportInRUN(t *testing.T) {
-	r := findRule("ExportInRUN")
-	d, err := newDockerfile([]byte(`FROM busybox
+	ps := analyzeOneRule("ExportInRUN", `FROM busybox
 RUN export FOO=BAR
-`), "/dev/null")
-	if err != nil {
-		t.Error(err)
-	}
-
-	ps := r.Analyze(d)
+`)
 	if len(ps) != 1 {
 		t.Errorf("should find one problem, but got %v", ps)
 	}
@@ -127,16 +82,10 @@ RUN export FOO=BAR
 }
 
 func TestRuleShellSyntaxError(t *testing.T) {
-	r := findRule("ShellSyntaxError")
-	d, err := newDockerfile([]byte(`FROM busybox
+	ps := analyzeOneRule("ShellSyntaxError", `FROM busybox
 RUN echo hoge
 RUN foo &&
-`), "/dev/null")
-	if err != nil {
-		t.Error(err)
-	}
-
-	ps := r.Analyze(d)
+`)
 	if len(ps) != 1 {
 		t.Errorf("should find one problem, but got %v", ps)
 	}
@@ -146,4 +95,23 @@ RUN foo &&
 	if ps[0].Line != 3 {
 		t.Errorf("Line should be 3, but got %d", ps[0].Line)
 	}
+}
+
+func analyzeOneRule(rule, dockerfile string) []Problem {
+	r := findRule(rule)
+	d, err := newDockerfile([]byte(dockerfile), "/dev/null")
+	if err != nil {
+		panic(err)
+	}
+
+	return r.Analyze(d)
+}
+
+func findRule(t string) Rule {
+	for _, r := range Rules {
+		if r.Type == t {
+			return r
+		}
+	}
+	panic(fmt.Sprintf("%s doesn't found", t))
 }
