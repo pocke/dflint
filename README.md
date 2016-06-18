@@ -4,6 +4,8 @@ This project works in progress
 dflint
 ===================
 
+[![Build Status](https://travis-ci.org/pocke/dflint.svg?branch=master)](https://travis-ci.org/pocke/dflint)
+
 A Linter for Dockerfile.
 
 
