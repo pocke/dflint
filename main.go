@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/bmatcuk/doublestar"
 	"github.com/ogier/pflag"
@@ -50,8 +51,12 @@ func Main(args []string) error {
 }
 
 func ParseArgs(args []string) (fmtrName string, arguments []string) {
+	fmtrNames := []string{}
+	for name := range Formatters {
+		fmtrNames = append(fmtrNames, name)
+	}
 	fs := pflag.NewFlagSet(args[0], pflag.ExitOnError)
-	fs.StringVarP(&fmtrName, "formatter", "f", "default", "Specify output formatter. []")
+	fs.StringVarP(&fmtrName, "formatter", "f", "default", fmt.Sprintf("Specify output formatter. [%s]", strings.Join(fmtrNames, ", ")))
 	fs.Parse(args[1:])
 
 	return fmtrName, fs.Args()
