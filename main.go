@@ -17,12 +17,7 @@ func main() {
 }
 
 func Main(args []string) error {
-	fs := pflag.NewFlagSet(args[0], pflag.ExitOnError)
-	fmtrName := ""
-	fs.StringVarP(&fmtrName, "formatter", "f", "default", "Output Formatter")
-	fs.Parse(args[1:])
-
-	targets := fs.Args()
+	fmtrName, targets := ParseArgs(args)
 	if len(targets) == 0 {
 		var err error
 		targets, err = doublestar.Glob("**/Dockerfile")
@@ -52,4 +47,12 @@ func Main(args []string) error {
 	fmtr(ps, os.Stdout)
 
 	return nil
+}
+
+func ParseArgs(args []string) (fmtrName string, arguments []string) {
+	fs := pflag.NewFlagSet(args[0], pflag.ExitOnError)
+	fs.StringVarP(&fmtrName, "formatter", "f", "default", "Specify output formatter. []")
+	fs.Parse(args[1:])
+
+	return fmtrName, fs.Args()
 }
