@@ -8,7 +8,7 @@ import (
 
 func FormatDefault(ps []Problem, w io.Writer) {
 	for _, p := range ps {
-		fmt.Printf("%s: line %d, col %d [%s] %s\n", p.Path, p.Line, p.Column, p.Type, p.Message)
+		fmt.Printf("%s:%d:%d: [%s] %s\n", p.Path, p.Line, p.Column, p.Type, p.Message)
 	}
 }
 
