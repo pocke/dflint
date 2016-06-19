@@ -114,7 +114,8 @@ var Rules = []Rule{
 						if len(s.Args) != 2 {
 							return
 						}
-						if l, ok := s.Args[0].Parts[0].(*sh.Lit); !ok || l.Value != "export" {
+
+						if !callExprEq(s, 0, "export") {
 							return
 						}
 						env, ok := s.Args[1].Parts[0].(*sh.Lit)
@@ -165,4 +166,57 @@ var Rules = []Rule{
 			return res
 		},
 	},
+
+	// TODO: Support apt-get, etc
+	{
+		Type: "YesOption",
+		f: func(r *Rule, d *Dockerfile) []Problem {
+			res := make([]Problem, 0)
+
+			for _, v := range d.Nodes("run") {
+				f, err := parseSh(v)
+				if err != nil {
+					continue
+				}
+
+				w := ShWalker{
+					onCallExpr: func(s *sh.CallExpr) {
+						if !(callExprEq(s, 0, "yum") || (callExprEq(s, 0, "sudo") && callExprEq(s, 0, "yum"))) {
+							return
+						}
+						for idx := range s.Args {
+							if callExprEq(s, idx, "-y") {
+								return
+							}
+						}
+						// TODO: line, col, ...
+						res = append(res, r.MakeProblem(
+							v.StartLine,
+							0,
+							0,
+							d,
+							"`-y` option is required with yum.",
+						))
+					},
+				}
+				for _, stmt := range f.Stmts {
+					w.Walk(stmt)
+				}
+
+			}
+
+			return res
+		},
+	},
+}
+
+func callExprEq(s *sh.CallExpr, idx int, target string) bool {
+	if len(s.Args) < idx+1 {
+		return false
+	}
+	l, ok := s.Args[idx].Parts[0].(*sh.Lit)
+	if !ok {
+		return false
+	}
+	return l.Value == target
 }
