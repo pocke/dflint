@@ -97,6 +97,24 @@ RUN foo &&
 	}
 }
 
+func TestRuleYesOption(t *testing.T) {
+	ps := analyzeOneRule("YesOption", `FROM busybox
+RUN yum install nginx -y
+RUN yum install nginx
+RUN echo yum install nginx`)
+
+	if len(ps) != 1 {
+		t.Errorf("should find one problems, but got %v", ps)
+	}
+	if ps[0].Type != "YesOption" {
+		t.Errorf("Type should be 'YesOption', but got %s", ps[0].Type)
+	}
+	if ps[0].Line != 3 {
+		t.Errorf("Line should be 3, but got %d", ps[0].Line)
+	}
+
+}
+
 func analyzeOneRule(rule, dockerfile string) []Problem {
 	r := findRule(rule)
 	d, err := newDockerfile([]byte(dockerfile), "/dev/null")
