@@ -68,7 +68,9 @@ FROM busybox
 
 func TestRuleExportInRUN(t *testing.T) {
 	ps := analyzeOneRule("ExportInRUN", `FROM busybox
+RUN export aaa
 RUN export FOO=BAR
+RUN echo $FOO
 `)
 	if len(ps) != 1 {
 		t.Errorf("should find one problem, but got %v", ps)
@@ -76,8 +78,8 @@ RUN export FOO=BAR
 	if ps[0].Type != "ExportInRUN" {
 		t.Errorf("Type should be 'ExportInRUN', but got %s", ps[0].Type)
 	}
-	if ps[0].Line != 2 {
-		t.Errorf("Line should be 2, but got %d", ps[0].Line)
+	if ps[0].Line != 3 {
+		t.Errorf("Line should be 3, but got %d", ps[0].Line)
 	}
 }
 
