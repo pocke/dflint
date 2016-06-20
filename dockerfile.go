@@ -35,7 +35,10 @@ func Analyze(fpath string, c *Config) ([]Problem, error) {
 
 	d, err := newDockerfile(b, fpath)
 	if err != nil {
-		return []Problem{{Message: "Syntax Error"}}, nil // TODO
+		return []Problem{{
+			Message: err.Error(),
+			Type:    "Syntax",
+		}}, nil // TODO
 	}
 
 	res := make([]Problem, 0)

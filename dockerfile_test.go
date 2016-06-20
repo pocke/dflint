@@ -28,7 +28,6 @@ func TestDockerfileAnalyze(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	defer f.Close()
 
 	_, err = Analyze(f.Name(), &Config{})
@@ -44,7 +43,6 @@ RUN yum install nginx`)
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	defer f.Close()
 
 	ps, err := Analyze(f.Name(), &Config{
@@ -66,6 +64,24 @@ RUN yum install nginx`)
 }
 
 func TestDockerfileAnalyze_WithSyntaxError(t *testing.T) {
+	f, err := newTempDockerfile(`FROM busybox
+ENV foo=bar hoge fuga`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	ps, err := Analyze(f.Name(), &Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(ps) != 1 {
+		t.Errorf("Expected len == 1, but got %d", len(ps))
+	}
+	if ps[0].Type != "Syntax" {
+		t.Errorf("Problem should be a Syntax, but got %s", ps[0].Type)
+	}
 }
 
 // --- test helper
@@ -85,8 +101,6 @@ func newTempDockerfile(value string) (*tempDockerfile, error) {
 		return nil, err
 	}
 
-	f.Write([]byte(`FROM busybox
-run ls
-RUN yum install nginx`))
+	f.Write([]byte(value))
 	return &tempDockerfile{f}, nil
 }
