@@ -24,15 +24,13 @@ RUN sl
 }
 
 func TestDockerfileAnalyze(t *testing.T) {
-	f, err := ioutil.TempFile("", "dflint-test")
+	f, err := newTempDockerfile(`FROM busybox`)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer os.Remove(f.Name())
 	defer f.Close()
 
-	f.Write([]byte(`FROM busybox`))
 	_, err = Analyze(f.Name(), &Config{})
 	if err != nil {
 		t.Fatal(err)
@@ -40,17 +38,14 @@ func TestDockerfileAnalyze(t *testing.T) {
 }
 
 func TestDockerfileAnalyze_WithDisabledRule(t *testing.T) {
-	f, err := ioutil.TempFile("", "dflint-test")
+	f, err := newTempDockerfile(`FROM busybox
+run ls
+RUN yum install nginx`)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer os.Remove(f.Name())
 	defer f.Close()
-
-	f.Write([]byte(`FROM busybox
-run ls
-RUN yum install nginx`))
 
 	ps, err := Analyze(f.Name(), &Config{
 		IgnoreRules: []string{"YesOption"},
@@ -68,4 +63,30 @@ RUN yum install nginx`))
 			t.Error("`YesOption` is ignored. but got")
 		}
 	}
+}
+
+func TestDockerfileAnalyze_WithSyntaxError(t *testing.T) {
+}
+
+// --- test helper
+
+type tempDockerfile struct {
+	*os.File
+}
+
+func (f *tempDockerfile) Close() error {
+	f.File.Close()
+	return os.Remove(f.Name())
+}
+
+func newTempDockerfile(value string) (*tempDockerfile, error) {
+	f, err := ioutil.TempFile("", "dflint-test")
+	if err != nil {
+		return nil, err
+	}
+
+	f.Write([]byte(`FROM busybox
+run ls
+RUN yum install nginx`))
+	return &tempDockerfile{f}, nil
 }
