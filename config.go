@@ -12,29 +12,26 @@ type Config struct {
 	IgnoreRules []string `yaml:"ignore_rules"`
 }
 
-func ParseConfig() (*Config, error) {
-	for _, path := range []string{"./dflint.yaml", "~/.config/dflint.yaml"} {
-		path, err := homedir.Expand(path)
-		if err != nil {
-			return nil, err
-		}
-
-		if !fileExists(path) {
-			continue
-		}
-
-		b, err := ioutil.ReadFile(path)
-		if err != nil {
-			return nil, err
-		}
-
-		c := new(Config)
-		yaml.Unmarshal(b, c)
-		return c, nil
+// ParseConfig parses config file.
+// When file doesn't exists, the func returns an empty config(NOT return error).
+func ParseConfig(path string) (*Config, error) {
+	path, err := homedir.Expand(path)
+	if err != nil {
+		return nil, err
 	}
 
-	// all file does not exist
-	return new(Config), nil
+	if !fileExists(path) {
+		return new(Config), nil
+	}
+
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	c := new(Config)
+	yaml.Unmarshal(b, c)
+	return c, nil
 }
 
 func (c *Config) IsEnabledRule(r string) bool {
