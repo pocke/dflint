@@ -7,7 +7,7 @@ type ShWalker struct {
 	onCallExpr  func(*sh.CallExpr)
 }
 
-func (w *ShWalker) Walk(stmt sh.Stmt) {
+func (w *ShWalker) Walk(stmt *sh.Stmt) {
 	switch s := stmt.Cmd.(type) {
 	case *sh.BinaryCmd:
 		if w.onBinaryCmd != nil {
