@@ -208,6 +208,50 @@ var Rules = []Rule{
 			return res
 		},
 	},
+
+	{
+		Type: "UnknownInstruction",
+		f: func(r *Rule, d *Dockerfile) []Problem {
+			AVAILABLE_INSTS := []string{
+				"FROM",
+				"MAINTAINER",
+				"RUN",
+				"CMD",
+				"LABEL",
+				"EXPOSE",
+				"ENV",
+				"ADD",
+				"COPY",
+				"ENTRYPOINT",
+				"VOLUME",
+				"USER",
+				"WORKDIR",
+				"ARG",
+				"ONBUILD",
+				"STOPSIGNAL",
+				"HEALTHCHECK",
+				"SHELL",
+			}
+			res := make([]Problem, 0)
+
+			for _, n := range d.AST.Children {
+				inst := strings.ToUpper(n.Value)
+				if hasString(AVAILABLE_INSTS, inst) {
+					continue
+				}
+
+				res = append(res, r.MakeProblem(
+					n.StartLine,
+					0, // TODO
+					len(n.Value),
+					d,
+					fmt.Sprintf("%s is unknown instruction", inst),
+				))
+			}
+
+			return res
+		},
+	},
 }
 
 func callExprEq(s *sh.CallExpr, idx int, target string) bool {
@@ -219,4 +263,13 @@ func callExprEq(s *sh.CallExpr, idx int, target string) bool {
 		return false
 	}
 	return l.Value == target
+}
+
+func hasString(slice []string, t string) bool {
+	for _, v := range slice {
+		if v == t {
+			return true
+		}
+	}
+	return false
 }

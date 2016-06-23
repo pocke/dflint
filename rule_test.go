@@ -117,6 +117,23 @@ RUN echo yum install nginx`)
 
 }
 
+func TestRuleUnknownInstruction(t *testing.T) {
+	ps := analyzeOneRule("UnknownInstruction", `FORM busybox
+RUN yum install -y nginx`)
+
+	if len(ps) != 1 {
+		t.Errorf("should find one problems, but got %v", ps)
+	}
+	if ps[0].Type != "UnknownInstruction" {
+		t.Errorf("Type should be 'UnknownInstruction', but got %s", ps[0].Type)
+	}
+	if ps[0].Line != 1 {
+		t.Errorf("Line should be 1, but got %d", ps[0].Line)
+	}
+}
+
+// test helper
+
 func analyzeOneRule(rule, dockerfile string) []Problem {
 	r := findRule(rule)
 	d, err := newDockerfile([]byte(dockerfile), "/dev/null")
