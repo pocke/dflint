@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -129,6 +130,9 @@ RUN yum install -y nginx`)
 	}
 	if ps[0].Line != 1 {
 		t.Errorf("Line should be 1, but got %d", ps[0].Line)
+	}
+	if !strings.Contains(ps[0].Message, "Did you mean `FROM`?") {
+		t.Errorf("Message should contains `Did you mean `FROM`?`. but got `%s`", ps[0].Message)
 	}
 }
 

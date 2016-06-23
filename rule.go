@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"strings"
 
 	"github.com/mvdan/sh"
+	"github.com/texttheater/golang-levenshtein/levenshtein"
 )
 
 type Rule struct {
@@ -240,12 +242,13 @@ var Rules = []Rule{
 					continue
 				}
 
+				c := nearestString(AVAILABLE_INSTS, inst)
 				res = append(res, r.MakeProblem(
 					n.StartLine,
 					0, // TODO
 					len(n.Value),
 					d,
-					fmt.Sprintf("%s is unknown instruction", inst),
+					fmt.Sprintf("%s is unknown instruction. Did you mean `%s`?", inst, c),
 				))
 			}
 
@@ -272,4 +275,26 @@ func hasString(slice []string, t string) bool {
 		}
 	}
 	return false
+}
+
+func nearestString(slice []string, t string) string {
+	ds := make([]int, 0, len(slice))
+	for _, s := range slice {
+		d := levenshtein.DistanceForStrings([]rune(s), []rune(t), levenshtein.DefaultOptions)
+		ds = append(ds, d)
+	}
+	idx := minIntIndex(ds)
+	return slice[idx]
+}
+
+func minIntIndex(slice []int) int {
+	min := math.MaxInt64
+	resIdx := 0
+	for idx, v := range slice {
+		if v < min {
+			min = v
+			resIdx = idx
+		}
+	}
+	return resIdx
 }
