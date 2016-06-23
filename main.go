@@ -20,10 +20,11 @@ func main() {
 }
 
 func Main(args []string) error {
-	fmtrName, confPath, targets, err := ParseArgs(args)
+	cmdArg, err := ParseArgs(args)
 	if err != nil {
 		return err
 	}
+	targets := cmdArg.Arguments
 
 	if len(targets) == 0 {
 		targets, err = doublestar.Glob("**/Dockerfile")
@@ -32,7 +33,7 @@ func Main(args []string) error {
 		}
 	}
 
-	c, err := ParseConfig(confPath)
+	c, err := ParseConfig(cmdArg.ConfigPath)
 	if err != nil {
 		return err
 	}
@@ -46,35 +47,43 @@ func Main(args []string) error {
 		ps = append(ps, problems...)
 	}
 
-	fmtr, ok := Formatters[fmtrName]
+	fmtr, ok := Formatters[cmdArg.FormatterName]
 	if !ok {
-		return fmt.Errorf("%s formatter doesn't exist.", fmtrName)
+		return fmt.Errorf("%s formatter doesn't exist.", cmdArg.FormatterName)
 	}
 	fmtr(ps, os.Stdout)
 
 	return nil
 }
 
-func ParseArgs(args []string) (fmtrName, confPath string, arguments []string, err error) {
+type CmdArg struct {
+	FormatterName string
+	ConfigPath    string
+	Arguments     []string
+}
+
+func ParseArgs(args []string) (*CmdArg, error) {
+	res := new(CmdArg)
+
 	fmtrNames := []string{}
 	for name := range Formatters {
 		fmtrNames = append(fmtrNames, name)
 	}
 
 	fs := pflag.NewFlagSet(args[0], pflag.ExitOnError)
-	fs.StringVarP(&fmtrName, "formatter", "f", "default", fmt.Sprintf("Specify output formatter. [%s]", strings.Join(fmtrNames, ", ")))
-	fs.StringVarP(&confPath, "config", "c", "", "Path of Configuration file (default \"./.dflint.yml\")")
+	fs.StringVarP(&res.FormatterName, "formatter", "f", "default", fmt.Sprintf("Specify output formatter. [%s]", strings.Join(fmtrNames, ", ")))
+	fs.StringVarP(&res.ConfigPath, "config", "c", "", "Path of Configuration file (default \"./.dflint.yml\")")
 	fs.Parse(args[1:])
 
-	if confPath == "" {
-		confPath = DEFAULT_CONF_PATH
+	if res.ConfigPath == "" {
+		res.ConfigPath = DEFAULT_CONF_PATH
 	} else {
 		// Check confPath exists when specified.
-		if !fileExists(confPath) {
-			return "", "", nil, fmt.Errorf("%s doesn't exist", confPath)
+		if !fileExists(res.ConfigPath) {
+			return nil, fmt.Errorf("%s doesn't exist", res.ConfigPath)
 		}
 	}
 
-	arguments = fs.Args()
-	return
+	res.Arguments = fs.Args()
+	return res, nil
 }
