@@ -115,7 +115,25 @@ RUN echo yum install nginx`)
 	if ps[0].Line != 3 {
 		t.Errorf("Line should be 3, but got %d", ps[0].Line)
 	}
+}
 
+func TestRuleYesOption_WithBinOp(t *testing.T) {
+	ps := analyzeOneRule("YesOption", `FROM busybox
+RUN yum install nginx -y && \
+  yum install nginx && \
+  echo yum install nginx && \
+  yum install nginx
+`)
+
+	if len(ps) != 2 {
+		t.Errorf("should find one problems, but got %v", ps)
+	}
+
+	for _, p := range ps {
+		if p.Type != "YesOption" {
+			t.Errorf("Type should be 'YesOption', but got %s", p.Type)
+		}
+	}
 }
 
 func TestRuleUnknownInstruction(t *testing.T) {
