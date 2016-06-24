@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -12,14 +13,14 @@ import (
 const DEFAULT_CONF_PATH = "./.dflint.yaml"
 
 func main() {
-	err := Main(os.Args)
+	err := Main(os.Args, os.Stdout)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-func Main(args []string) error {
+func Main(args []string, out io.Writer) error {
 	cmdArg, err := ParseArgs(args)
 	if err != nil {
 		return err
@@ -51,7 +52,7 @@ func Main(args []string) error {
 	if !ok {
 		return fmt.Errorf("%s formatter doesn't exist.", cmdArg.FormatterName)
 	}
-	fmtr(ps, os.Stdout)
+	fmtr(ps, out)
 
 	return nil
 }
