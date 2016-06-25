@@ -10,7 +10,7 @@ import (
 	"github.com/ogier/pflag"
 )
 
-const DEFAULT_CONF_PATH = "./.dflint.yaml"
+const DEFAULT_CONF_PATH = "./.dflint.yml"
 
 func main() {
 	err := Main(os.Args, os.Stdout)
