@@ -80,6 +80,52 @@ func TestMain_WithNotExistConfig(t *testing.T) {
 	}
 }
 
+func TestMain_WithImplicitConfigFile(t *testing.T) {
+	reset, err := cd("./testdata/with_dflint_yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reset()
+
+	var b bytes.Buffer
+	err = Main([]string{"dflint"}, &b)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(b.Bytes()) == 0 {
+		t.Error("should detect some issues, but any issues not exist")
+	}
+	for _, line := range strings.Split(b.String(), "\n") {
+		if strings.Contains(line, "DowncaseInstruction") {
+			t.Errorf("Type should not be DowncaseInstruction. but got %s", line)
+		}
+	}
+}
+
+func TestMain_WithExplicitConfigFile(t *testing.T) {
+	reset, err := cd("./testdata/with_dflint_yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reset()
+
+	var b bytes.Buffer
+	err = Main([]string{"dflint", "-c", "explicit-dflint.yml"}, &b)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(b.Bytes()) == 0 {
+		t.Error("should detect some issues, but any issues not exist")
+	}
+	for _, line := range strings.Split(b.String(), "\n") {
+		if strings.Contains(line, "YesOption") {
+			t.Errorf("Type should not be YesOption. but got %s", line)
+		}
+	}
+}
+
 func cd(dir string) (func(), error) {
 	current, err := os.Getwd()
 	if err != nil {
