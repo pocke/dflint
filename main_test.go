@@ -16,9 +16,12 @@ func TestMain_nodockerfile(t *testing.T) {
 	defer reset()
 
 	var b bytes.Buffer
-	err = Main([]string{"dflint"}, &b)
+	exitCode, err := Main([]string{"dflint"}, &b)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if exitCode != ExitCodeSuccess {
+		t.Errorf("Exit code should be %d, but got %d", ExitCodeSuccess, exitCode)
 	}
 	if len(b.Bytes()) != 0 {
 		t.Errorf("should be no output, but got `%s`", b.String())
@@ -33,9 +36,12 @@ func TestMain_WithHasSomeProblem(t *testing.T) {
 	defer reset()
 
 	var b bytes.Buffer
-	err = Main([]string{"dflint"}, &b)
+	exitCode, err := Main([]string{"dflint"}, &b)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if exitCode != ExitCodeHasProblem {
+		t.Errorf("Exit code should be %d, but got %d", ExitCodeHasProblem, exitCode)
 	}
 	if len(b.Bytes()) == 0 {
 		t.Error("should detect some issues, but any issues not exist")
@@ -50,9 +56,12 @@ func TestMain_WithJSONFormatter(t *testing.T) {
 	defer reset()
 
 	var b bytes.Buffer
-	err = Main([]string{"dflint", "--formatter=json"}, &b)
+	exitCode, err := Main([]string{"dflint", "--formatter=json"}, &b)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if exitCode != ExitCodeHasProblem {
+		t.Errorf("Exit code should be %d, but got %d", ExitCodeHasProblem, exitCode)
 	}
 
 	ps := []Problem{}
@@ -68,9 +77,12 @@ func TestMain_WithJSONFormatter(t *testing.T) {
 
 func TestMain_WithNotExistConfig(t *testing.T) {
 	var b bytes.Buffer
-	err := Main([]string{"dflint", "--config=does-not-exist-dflint.yml"}, &b)
+	exitCode, err := Main([]string{"dflint", "--config=does-not-exist-dflint.yml"}, &b)
 	if err == nil {
 		t.Error("Error should not be nil, but got nil")
+	}
+	if exitCode != ExitCodeError {
+		t.Errorf("Exit code should be %d, but got %d", ExitCodeError, exitCode)
 	}
 	if !strings.Contains(err.Error(), "does-not-exist-dflint.yml") {
 		t.Errorf("error should be not found config file, but got %s", err.Error())
@@ -88,9 +100,12 @@ func TestMain_WithImplicitConfigFile(t *testing.T) {
 	defer reset()
 
 	var b bytes.Buffer
-	err = Main([]string{"dflint"}, &b)
+	exitCode, err := Main([]string{"dflint"}, &b)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if exitCode != ExitCodeHasProblem {
+		t.Errorf("Exit code should be %d, but got %d", ExitCodeHasProblem, exitCode)
 	}
 
 	if len(b.Bytes()) == 0 {
@@ -111,9 +126,12 @@ func TestMain_WithExplicitConfigFile(t *testing.T) {
 	defer reset()
 
 	var b bytes.Buffer
-	err = Main([]string{"dflint", "-c", "explicit-dflint.yml"}, &b)
+	exitCode, err := Main([]string{"dflint", "-c", "explicit-dflint.yml"}, &b)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if exitCode != ExitCodeHasProblem {
+		t.Errorf("Exit code should be %d, but got %d", ExitCodeHasProblem, exitCode)
 	}
 
 	if len(b.Bytes()) == 0 {

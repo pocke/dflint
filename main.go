@@ -10,51 +10,62 @@ import (
 	"github.com/ogier/pflag"
 )
 
+const (
+	ExitCodeSuccess    = 0
+	ExitCodeHasProblem = 1
+	ExitCodeError      = 2
+)
+
 const DEFAULT_CONF_PATH = "./.dflint.yml"
 
 func main() {
-	err := Main(os.Args, os.Stdout)
+	exitCode, err := Main(os.Args, os.Stdout)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
 	}
+	os.Exit(exitCode)
 }
 
-func Main(args []string, out io.Writer) error {
+// Main returns an exit code and an error.
+func Main(args []string, out io.Writer) (int, error) {
 	cmdArg, err := ParseArgs(args)
 	if err != nil {
-		return err
+		return ExitCodeError, err
 	}
 	targets := cmdArg.Arguments
 
 	if len(targets) == 0 {
 		targets, err = doublestar.Glob("**/Dockerfile")
 		if err != nil {
-			return err
+			return ExitCodeError, err
 		}
 	}
 
 	c, err := ParseConfig(cmdArg.ConfigPath)
 	if err != nil {
-		return err
+		return ExitCodeError, err
 	}
 
 	ps := make([]Problem, 0)
 	for _, f := range targets {
 		problems, err := Analyze(f, c)
 		if err != nil {
-			return err
+			return ExitCodeError, err
 		}
 		ps = append(ps, problems...)
 	}
 
 	fmtr, ok := Formatters[cmdArg.FormatterName]
 	if !ok {
-		return fmt.Errorf("%s formatter doesn't exist.", cmdArg.FormatterName)
+		return ExitCodeError, fmt.Errorf("%s formatter doesn't exist.", cmdArg.FormatterName)
 	}
 	fmtr(ps, out)
 
-	return nil
+	if len(ps) == 0 {
+		return ExitCodeSuccess, nil
+	} else {
+		return ExitCodeHasProblem, nil
+	}
 }
 
 type CmdArg struct {
