@@ -144,6 +144,21 @@ func TestMain_WithExplicitConfigFile(t *testing.T) {
 	}
 }
 
+func TestMain_WithUnknownFormatter(t *testing.T) {
+	var b bytes.Buffer
+	exitCode, err := Main([]string{"dflint", "-f", "hogehoge"}, &b)
+	if err == nil {
+		t.Fatal("should error, but got nil")
+	}
+	if exitCode != ExitCodeError {
+		t.Errorf("Exit code should be %d, but got %d", ExitCodeError, exitCode)
+	}
+
+	if err.Error() != "hogehoge formatter doesn't exist." {
+		t.Error(err)
+	}
+}
+
 func cd(dir string) (func(), error) {
 	current, err := os.Getwd()
 	if err != nil {
