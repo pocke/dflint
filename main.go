@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/bmatcuk/doublestar"
 	"github.com/ogier/pflag"
@@ -55,11 +54,7 @@ func Main(args []string, out io.Writer) (int, error) {
 		ps = append(ps, problems...)
 	}
 
-	fmtr, ok := Formatters[cmdArg.FormatterName]
-	if !ok {
-		return ExitCodeError, fmt.Errorf("%s formatter doesn't exist.", cmdArg.FormatterName)
-	}
-	fmtr(ps, out)
+	cmdArg.Formatter(ps, out)
 
 	if len(ps) == 0 {
 		return ExitCodeSuccess, nil
@@ -69,21 +64,17 @@ func Main(args []string, out io.Writer) (int, error) {
 }
 
 type CmdArg struct {
-	FormatterName string
-	ConfigPath    string
-	Arguments     []string
+	Formatter  FormatFunc
+	ConfigPath string
+	Arguments  []string
 }
 
 func ParseArgs(args []string) (*CmdArg, error) {
 	res := new(CmdArg)
-
-	fmtrNames := []string{}
-	for name := range Formatters {
-		fmtrNames = append(fmtrNames, name)
-	}
+	var fmtrName string
 
 	fs := pflag.NewFlagSet(args[0], pflag.ExitOnError)
-	fs.StringVarP(&res.FormatterName, "formatter", "f", "default", fmt.Sprintf("Specify output formatter. [%s]", strings.Join(fmtrNames, ", ")))
+	fs.StringVarP(&fmtrName, "formatter", "f", "default", fmt.Sprintf("Specify output formatter. [%s]", FormatterNames()))
 	fs.StringVarP(&res.ConfigPath, "config", "c", "", "Path of Configuration file (default \"./.dflint.yml\")")
 	fs.Parse(args[1:])
 
@@ -95,6 +86,12 @@ func ParseArgs(args []string) (*CmdArg, error) {
 			return nil, fmt.Errorf("%s doesn't exist", res.ConfigPath)
 		}
 	}
+
+	fmtr, ok := Formatters[fmtrName]
+	if !ok {
+		return nil, fmt.Errorf("%s formatter doesn't exist.", fmtrName)
+	}
+	res.Formatter = fmtr
 
 	res.Arguments = fs.Args()
 	return res, nil
