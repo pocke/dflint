@@ -6,6 +6,7 @@ dflint
 
 [![Build Status](https://travis-ci.org/pocke/dflint.svg?branch=master)](https://travis-ci.org/pocke/dflint)
 [![Coverage Status](https://coveralls.io/repos/github/pocke/dflint/badge.svg?branch=master)](https://coveralls.io/github/pocke/dflint?branch=master)
+[![Stories in Ready](https://badge.waffle.io/pocke/dflint.svg?label=ready&title=Ready)](http://waffle.io/pocke/dflint)
 
 A Linter for Dockerfile.
 
